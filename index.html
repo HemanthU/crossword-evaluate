@@ -10,23 +10,24 @@ body{
   color:white;
   text-align:center;
   font-family:sans-serif;
-  padding:40px;
+  padding:30px;
 }
 
 h1{
-  margin-bottom:20px;
+  margin-bottom:10px;
 }
 
 input{
   padding:10px;
   margin:8px;
-  width:250px;
+  width:260px;
   border-radius:5px;
   border:none;
 }
 
 button{
   padding:10px 20px;
+  margin:10px;
   background:#22c55e;
   border:none;
   color:white;
@@ -38,10 +39,21 @@ button:hover{
   background:#16a34a;
 }
 
-#result{
+table{
+  margin:auto;
   margin-top:20px;
-  font-size:20px;
-  font-weight:bold;
+  border-collapse:collapse;
+  width:60%;
+}
+
+td, th{
+  border:1px solid white;
+  padding:10px;
+}
+
+#result{
+  margin-top:15px;
+  font-size:18px;
 }
 </style>
 
@@ -52,16 +64,20 @@ button:hover{
 <h1>Crossword Evaluation</h1>
 
 <input id="team" placeholder="Enter Team Name"><br>
-
 <input id="ans" placeholder="Paste all answers here"><br>
 
 <button onclick="check()">Check Score</button>
+<button onclick="exportData()">Export Results</button>
+<button onclick="resetData()">Reset</button>
 
 <p id="result"></p>
 
+<h2>Leaderboard</h2>
+<div id="board"></div>
+
 <script>
 
-// ✅ YOUR ACTUAL ANSWERS (FROM PDF)
+// ✅ FINAL ANSWERS
 const answers = [
   "ALGORITHM",
   "WEBBROWSER",
@@ -80,27 +96,94 @@ const answers = [
   "PASSWORD"
 ];
 
+// LOAD LEADERBOARD
+function loadBoard(){
+
+  let data = JSON.parse(localStorage.getItem("scores")) || [];
+
+  let html = "<table><tr><th>Team</th><th>Score</th></tr>";
+
+  data
+    .sort((a,b) => b.score - a.score)
+    .forEach(row=>{
+      html += `<tr><td>${row.team}</td><td>${row.score}</td></tr>`;
+    });
+
+  html += "</table>";
+
+  document.getElementById("board").innerHTML = html;
+}
+
+// CHECK SCORE
 function check(){
 
   let text = document.getElementById("ans").value
               .toUpperCase()
               .replace(/\s/g,"");
 
+  let team = document.getElementById("team").value;
+
+  if(team === ""){
+    alert("Enter team name");
+    return;
+  }
+
   let score = 0;
 
-  answers.forEach(word => {
+  answers.forEach(word=>{
     if(text.includes(word)){
       score++;
     }
   });
 
-  let team = document.getElementById("team").value;
-
   document.getElementById("result").innerHTML =
     "Team: " + team + "<br>Score: " + score + " / " + answers.length;
+
+  // SAVE DATA
+  let data = JSON.parse(localStorage.getItem("scores")) || [];
+
+  data.push({team: team, score: score});
+
+  localStorage.setItem("scores", JSON.stringify(data));
+
+  loadBoard();
 }
+
+// EXPORT TO CSV
+function exportData(){
+
+  let data = JSON.parse(localStorage.getItem("scores")) || [];
+
+  let csv = "Team,Score\n";
+
+  data
+    .sort((a,b)=>b.score-a.score)
+    .forEach(row=>{
+      csv += row.team + "," + row.score + "\n";
+    });
+
+  let blob = new Blob([csv], { type: "text/csv" });
+
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "results.csv";
+
+  link.click();
+}
+
+// RESET DATA
+function resetData(){
+
+  if(confirm("Are you sure you want to reset all data?")){
+    localStorage.removeItem("scores");
+    loadBoard();
+  }
+}
+
+// LOAD ON START
+window.onload = loadBoard;
 
 </script>
 
 </body>
-  </html>
+</html>
