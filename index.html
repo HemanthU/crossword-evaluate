@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Crossword Evaluation</title>
+<title>Event System</title>
 
 <style>
 body{
@@ -10,50 +10,32 @@ body{
   color:white;
   text-align:center;
   font-family:sans-serif;
-  padding:30px;
-}
-
-h1{
-  margin-bottom:10px;
-}
-
-input{
-  padding:10px;
-  margin:8px;
-  width:260px;
-  border-radius:5px;
-  border:none;
+  padding:20px;
 }
 
 button{
-  padding:10px 20px;
-  margin:10px;
+  padding:6px 12px;
   background:#22c55e;
   border:none;
   color:white;
-  border-radius:5px;
   cursor:pointer;
+  margin:5px;
 }
 
-button:hover{
-  background:#16a34a;
+input{
+  width:60px;
+  padding:5px;
 }
 
 table{
   margin:auto;
-  margin-top:20px;
   border-collapse:collapse;
-  width:60%;
+  margin-top:20px;
 }
 
 td, th{
   border:1px solid white;
   padding:10px;
-}
-
-#result{
-  margin-top:15px;
-  font-size:18px;
 }
 </style>
 
@@ -61,127 +43,144 @@ td, th{
 
 <body>
 
-<h1>Crossword Evaluation</h1>
+<h1>Event Timing & Scoring</h1>
 
-<input id="team" placeholder="Enter Team Name"><br>
-<input id="ans" placeholder="Paste all answers here"><br>
+<button onclick="startTimer()">Start Event</button>
+<h2 id="timer">Time: 0s</h2>
 
-<button onclick="check()">Check Score</button>
-<button onclick="exportData()">Export Results</button>
-<button onclick="resetData()">Reset</button>
+<h2>Team Panel</h2>
+<table id="panel">
+<tr>
+  <th>Team</th>
+  <th>Score</th>
+  <th>Action</th>
+  <th>Time</th>
+</tr>
+</table>
 
-<p id="result"></p>
+<button onclick="updateScores()">Update Scores</button>
 
 <h2>Leaderboard</h2>
 <div id="board"></div>
 
 <script>
 
-// ✅ FINAL ANSWERS
-const answers = [
-  "ALGORITHM",
-  "WEBBROWSER",
-  "BACKUP",
-  "FOODDELIVERYAPP",
-  "VIDEOPLATFORM",
-  "CLOUD",
-  "STREAMINGPLATFORM",
-  "PIXEL",
-  "MESSAGINGAPP",
-  "STACK",
-  "SOCIALMEDIA",
-  "RIDESHARINGAPP",
-  "EMAILSERVICE",
-  "URL",
-  "PASSWORD"
+const teams = [
+  "Team 1","Team 2","Team 3","Team 4","Team 5",
+  "Team 6","Team 7","Team 8","Team 9","Team 10"
 ];
 
-// LOAD LEADERBOARD
-function loadBoard(){
+let startTime = 0;
+let timerInterval;
+let data = [];
 
-  let data = JSON.parse(localStorage.getItem("scores")) || [];
+// START TIMER
+function startTimer(){
 
-  let html = "<table><tr><th>Team</th><th>Score</th></tr>";
+  startTime = Date.now();
 
-  data
-    .sort((a,b) => b.score - a.score)
-    .forEach(row=>{
-      html += `<tr><td>${row.team}</td><td>${row.score}</td></tr>`;
-    });
-
-  html += "</table>";
-
-  document.getElementById("board").innerHTML = html;
+  timerInterval = setInterval(()=>{
+    let t = Math.floor((Date.now() - startTime)/1000);
+    document.getElementById("timer").innerText = "Time: " + t + "s";
+  },1000);
 }
 
-// CHECK SCORE
-function check(){
+// LOAD PANEL
+function loadPanel(){
 
-  let text = document.getElementById("ans").value
-              .toUpperCase()
-              .replace(/\s/g,"");
+  let table = document.getElementById("panel");
 
-  let team = document.getElementById("team").value;
+  teams.forEach((team,i)=>{
 
-  if(team === ""){
-    alert("Enter team name");
-    return;
-  }
+    let row = table.insertRow();
 
-  let score = 0;
-
-  answers.forEach(word=>{
-    if(text.includes(word)){
-      score++;
-    }
+    row.innerHTML = `
+      <td>${team}</td>
+      <td><input type="number" id="score${i}" placeholder="-"></td>
+      <td><button id="btn${i}" onclick="finishTeam(${i})">Finish</button></td>
+      <td id="time${i}">-</td>
+    `;
   });
+}
 
-  document.getElementById("result").innerHTML =
-    "Team: " + team + "<br>Score: " + score + " / " + answers.length;
+// FINISH TEAM → SAVE ONLY TIME
+function finishTeam(i){
 
-  // SAVE DATA
-  let data = JSON.parse(localStorage.getItem("scores")) || [];
+  let time = Math.floor((Date.now() - startTime)/1000);
 
-  data.push({team: team, score: score});
+  document.getElementById("time"+i).innerText = time + "s";
+
+  document.getElementById("btn"+i).disabled = true;
+
+  data.push({
+    team: teams[i],
+    time: time,
+    score: null // 🔥 score later
+  });
 
   localStorage.setItem("scores", JSON.stringify(data));
 
   loadBoard();
 }
 
-// EXPORT TO CSV
-function exportData(){
+// UPDATE SCORES LATER
+function updateScores(){
 
   let data = JSON.parse(localStorage.getItem("scores")) || [];
 
-  let csv = "Team,Score\n";
+  data.forEach((row,i)=>{
+    let val = document.getElementById("score"+i)?.value;
 
-  data
-    .sort((a,b)=>b.score-a.score)
-    .forEach(row=>{
-      csv += row.team + "," + row.score + "\n";
-    });
+    if(val !== ""){
+      row.score = parseInt(val);
+    }
+  });
 
-  let blob = new Blob([csv], { type: "text/csv" });
+  localStorage.setItem("scores", JSON.stringify(data));
 
-  let link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "results.csv";
-
-  link.click();
+  loadBoard();
 }
 
-// RESET DATA
-function resetData(){
+// LOAD LEADERBOARD
+function loadBoard(){
 
-  if(confirm("Are you sure you want to reset all data?")){
-    localStorage.removeItem("scores");
-    loadBoard();
-  }
+  let data = JSON.parse(localStorage.getItem("scores")) || [];
+
+  let html = "<table><tr><th>Team</th><th>Score</th><th>Time</th></tr>";
+
+  let hasScores = data.some(d => d.score !== null);
+
+  data.sort((a,b)=>{
+
+    if(hasScores){
+      if((b.score||0)!==(a.score||0)){
+        return (b.score||0)-(a.score||0);
+      }
+      return a.time - b.time;
+    } else {
+      return a.time - b.time;
+    }
+
+  });
+
+  data.forEach(row=>{
+    html += `<tr>
+      <td>${row.team}</td>
+      <td>${row.score ?? "-"}</td>
+      <td>${row.time}</td>
+    </tr>`;
+  });
+
+  html += "</table>";
+
+  document.getElementById("board").innerHTML = html;
 }
 
-// LOAD ON START
-window.onload = loadBoard;
+// INIT
+window.onload = function(){
+  loadPanel();
+  loadBoard();
+};
 
 </script>
 
