@@ -2,66 +2,162 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Event System</title>
+<title>Event Dashboard</title>
 
 <style>
+
+/* BACKGROUND */
 body{
-  background:#0f172a;
-  color:white;
-  text-align:center;
+  margin:0;
   font-family:sans-serif;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
   padding:20px;
 }
 
-button{
-  padding:6px 12px;
-  background:#22c55e;
-  border:none;
-  color:white;
-  cursor:pointer;
-  margin:5px;
+/* HEADER */
+h1{
+  text-align:center;
+  margin-bottom:10px;
 }
 
-input{
-  width:60px;
-  padding:5px;
+/* TIMER */
+#timer{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:20px;
 }
 
+/* LAYOUT */
+.container{
+  display:flex;
+  gap:20px;
+}
+
+/* CARD DESIGN */
+.card{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+
+/* PANELS */
+.left{ width:55%; }
+.right{ width:45%; }
+
+/* TABLE */
 table{
-  margin:auto;
+  width:100%;
   border-collapse:collapse;
-  margin-top:20px;
 }
 
 td, th{
-  border:1px solid white;
-  padding:10px;
+  padding:12px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
 }
-</style>
 
+/* INPUT */
+input{
+  width:60px;
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  text-align:center;
+}
+
+/* SEARCH */
+#searchBox{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-bottom:10px;
+}
+
+/* BUTTON */
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+/* LEADERBOARD HIGHLIGHT */
+tr:hover{
+  background:rgba(255,255,255,0.08);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .container{
+    flex-direction:column;
+  }
+  .left,.right{
+    width:100%;
+  }
+}
+
+</style>
 </head>
 
 <body>
 
-<h1>Event Timing & Scoring</h1>
+<h1>⚡ Event Dashboard</h1>
 
-<button onclick="startTimer()">Start Event</button>
-<h2 id="timer">Time: 0s</h2>
+<div style="text-align:center;">
+  <button onclick="startTimer()">Start Event</button>
+</div>
 
-<h2>Team Panel</h2>
-<table id="panel">
-<tr>
-  <th>Team</th>
-  <th>Score</th>
-  <th>Action</th>
-  <th>Time</th>
-</tr>
-</table>
+<h2 id="timer">Time: 0m 0s</h2>
 
-<button onclick="updateScores()">Update Scores</button>
+<div class="container">
 
-<h2>Leaderboard</h2>
-<div id="board"></div>
+  <!-- LEFT PANEL -->
+  <div class="left card">
+    <h2>🎯 Team Panel</h2>
+
+    <table id="panel">
+      <tr>
+        <th>Team</th>
+        <th>Score</th>
+        <th>Action</th>
+        <th>Time</th>
+      </tr>
+    </table>
+
+    <br>
+    <button onclick="updateScores()">Update Scores</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right card">
+    <h2>🏆 Leaderboard</h2>
+
+    <input 
+      type="text" 
+      id="searchBox" 
+      placeholder="🔍 Search team..." 
+      onkeyup="loadBoard()"
+    >
+
+    <button onclick="exportData()">Export</button>
+    <button onclick="clearSearch()">Clear</button>
+
+    <br><br>
+
+    <div id="board"></div>
+  </div>
+
+</div>
 
 <script>
 
@@ -71,51 +167,53 @@ const teams = [
 ];
 
 let startTime = 0;
-let timerInterval;
 let data = [];
 
-// START TIMER
-function startTimer(){
+// FORMAT TIME
+function formatTime(sec){
+  let m = Math.floor(sec/60);
+  let s = sec % 60;
+  return m + "m " + s + "s";
+}
 
+// TIMER
+function startTimer(){
   startTime = Date.now();
 
-  timerInterval = setInterval(()=>{
-    let t = Math.floor((Date.now() - startTime)/1000);
-    document.getElementById("timer").innerText = "Time: " + t + "s";
+  setInterval(()=>{
+    let t = Math.floor((Date.now()-startTime)/1000);
+    document.getElementById("timer").innerText = "Time: " + formatTime(t);
   },1000);
 }
 
 // LOAD PANEL
 function loadPanel(){
-
   let table = document.getElementById("panel");
 
   teams.forEach((team,i)=>{
-
     let row = table.insertRow();
 
     row.innerHTML = `
       <td>${team}</td>
-      <td><input type="number" id="score${i}" placeholder="-"></td>
+      <td><input type="number" id="score${i}"></td>
       <td><button id="btn${i}" onclick="finishTeam(${i})">Finish</button></td>
       <td id="time${i}">-</td>
     `;
   });
 }
 
-// FINISH TEAM → SAVE ONLY TIME
+// FINISH TEAM
 function finishTeam(i){
 
-  let time = Math.floor((Date.now() - startTime)/1000);
+  let time = Math.floor((Date.now()-startTime)/1000);
 
-  document.getElementById("time"+i).innerText = time + "s";
-
+  document.getElementById("time"+i).innerText = formatTime(time);
   document.getElementById("btn"+i).disabled = true;
 
   data.push({
     team: teams[i],
     time: time,
-    score: null // 🔥 score later
+    score: null
   });
 
   localStorage.setItem("scores", JSON.stringify(data));
@@ -123,14 +221,13 @@ function finishTeam(i){
   loadBoard();
 }
 
-// UPDATE SCORES LATER
+// UPDATE SCORES
 function updateScores(){
 
   let data = JSON.parse(localStorage.getItem("scores")) || [];
 
   data.forEach((row,i)=>{
     let val = document.getElementById("score"+i)?.value;
-
     if(val !== ""){
       row.score = parseInt(val);
     }
@@ -145,13 +242,13 @@ function updateScores(){
 function loadBoard(){
 
   let data = JSON.parse(localStorage.getItem("scores")) || [];
+  let search = document.getElementById("searchBox")?.value.toLowerCase() || "";
 
   let html = "<table><tr><th>Team</th><th>Score</th><th>Time</th></tr>";
 
-  let hasScores = data.some(d => d.score !== null);
+  let hasScores = data.some(d=>d.score!==null);
 
   data.sort((a,b)=>{
-
     if(hasScores){
       if((b.score||0)!==(a.score||0)){
         return (b.score||0)-(a.score||0);
@@ -160,20 +257,46 @@ function loadBoard(){
     } else {
       return a.time - b.time;
     }
-
   });
 
   data.forEach(row=>{
-    html += `<tr>
-      <td>${row.team}</td>
-      <td>${row.score ?? "-"}</td>
-      <td>${row.time}</td>
-    </tr>`;
+    if(row.team.toLowerCase().includes(search)){
+      html += `<tr>
+        <td>${row.team}</td>
+        <td>${row.score ?? "-"}</td>
+        <td>${formatTime(row.time)}</td>
+      </tr>`;
+    }
   });
 
   html += "</table>";
 
   document.getElementById("board").innerHTML = html;
+}
+
+// EXPORT
+function exportData(){
+
+  let data = JSON.parse(localStorage.getItem("scores")) || [];
+
+  let csv = "Team,Score,Time\n";
+
+  data.forEach(row=>{
+    csv += `${row.team},${row.score ?? ""},${formatTime(row.time)}\n`;
+  });
+
+  let blob = new Blob([csv], {type:"text/csv"});
+
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "leaderboard.csv";
+  link.click();
+}
+
+// CLEAR SEARCH
+function clearSearch(){
+  document.getElementById("searchBox").value="";
+  loadBoard();
 }
 
 // INIT
