@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Crossword Evaluation</title>
+
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  text-align:center;
+  font-family:sans-serif;
+  padding:40px;
+}
+
+h1{
+  margin-bottom:20px;
+}
+
+input{
+  padding:10px;
+  margin:8px;
+  width:250px;
+  border-radius:5px;
+  border:none;
+}
+
+button{
+  padding:10px 20px;
+  background:#22c55e;
+  border:none;
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#16a34a;
+}
+
+#result{
+  margin-top:20px;
+  font-size:20px;
+  font-weight:bold;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Crossword Evaluation</h1>
+
+<input id="team" placeholder="Enter Team Name"><br>
+
+<input id="ans" placeholder="Paste all answers here"><br>
+
+<button onclick="check()">Check Score</button>
+
+<p id="result"></p>
+
+<script>
+
+// ✅ YOUR ACTUAL ANSWERS (FROM PDF)
+const answers = [
+  "ALGORITHM",
+  "WEBBROWSER",
+  "BACKUP",
+  "FOODDELIVERYAPP",
+  "VIDEOPLATFORM",
+  "CLOUD",
+  "STREAMINGPLATFORM",
+  "PIXEL",
+  "MESSAGINGAPP",
+  "STACK",
+  "SOCIALMEDIA",
+  "RIDESHARINGAPP",
+  "EMAILSERVICE",
+  "URL",
+  "PASSWORD"
+];
+
+function check(){
+
+  let text = document.getElementById("ans").value
+              .toUpperCase()
+              .replace(/\s/g,"");
+
+  let score = 0;
+
+  answers.forEach(word => {
+    if(text.includes(word)){
+      score++;
+    }
+  });
+
+  let team = document.getElementById("team").value;
+
+  document.getElementById("result").innerHTML =
+    "Team: " + team + "<br>Score: " + score + " / " + answers.length;
+}
+
+</script>
+
+</body>
+  </html>
