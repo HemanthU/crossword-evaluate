@@ -5,8 +5,6 @@
 <title>Event Dashboard</title>
 
 <style>
-
-/* BACKGROUND */
 body{
   margin:0;
   font-family:sans-serif;
@@ -15,52 +13,31 @@ body{
   padding:20px;
 }
 
-/* HEADER */
-h1{
-  text-align:center;
-}
+h1{text-align:center;}
 
-/* 🔥 BIG DISPLAY TIMER */
 #timer{
   text-align:center;
   font-size:70px;
   font-weight:bold;
   margin:20px 0;
-  letter-spacing:2px;
-  text-shadow: 0 0 10px #22c55e, 0 0 25px #22c55e;
+  text-shadow:0 0 10px #22c55e,0 0 25px #22c55e;
 }
 
-/* LAYOUT */
-.container{
-  display:flex;
-  gap:20px;
-}
+.container{display:flex;gap:20px;}
 
-/* CARD */
 .card{
   background:rgba(255,255,255,0.05);
   backdrop-filter:blur(10px);
   padding:20px;
   border-radius:16px;
-  box-shadow:0 0 20px rgba(0,0,0,0.3);
 }
 
-/* PANELS */
 .left{width:55%;}
 .right{width:45%;}
 
-/* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+table{width:100%;border-collapse:collapse;}
+td,th{padding:12px;border-bottom:1px solid rgba(255,255,255,0.1);}
 
-td, th{
-  padding:12px;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-}
-
-/* INPUT */
 input{
   width:60px;
   padding:6px;
@@ -69,7 +46,6 @@ input{
   text-align:center;
 }
 
-/* SEARCH */
 .search{
   width:100%;
   padding:10px;
@@ -78,7 +54,6 @@ input{
   margin-bottom:10px;
 }
 
-/* BUTTON */
 button{
   padding:8px 14px;
   border:none;
@@ -88,24 +63,14 @@ button{
   background:linear-gradient(135deg,#22c55e,#16a34a);
 }
 
-button:hover{
-  transform:scale(1.05);
-}
+tr:hover{background:rgba(255,255,255,0.08);}
 
-/* ROW HOVER */
-tr:hover{
-  background:rgba(255,255,255,0.08);
-}
-
-/* MOBILE */
 @media(max-width:768px){
   .container{flex-direction:column;}
   .left,.right{width:100%;}
   #timer{font-size:40px;}
 }
-
 </style>
-
 </head>
 
 <body>
@@ -121,17 +86,10 @@ tr:hover{
 
 <div class="container">
 
-<!-- LEFT -->
 <div class="left card">
   <h2>🎯 Team Panel</h2>
 
-  <input 
-    type="text" 
-    id="searchBox2" 
-    class="search"
-    placeholder="🔍 Search team..."
-    onkeyup="filterPanel()"
-  >
+  <input id="searchBox2" class="search" placeholder="🔍 Search team..." onkeyup="filterPanel()">
 
   <table id="panel">
     <tr>
@@ -146,17 +104,10 @@ tr:hover{
   <button onclick="updateScores()">Update Scores</button>
 </div>
 
-<!-- RIGHT -->
 <div class="right card">
   <h2>🏆 Leaderboard</h2>
 
-  <input 
-    type="text" 
-    id="searchBox" 
-    class="search"
-    placeholder="🔍 Search team..."
-    onkeyup="syncSearch()"
-  >
+  <input id="searchBox" class="search" placeholder="🔍 Search team..." onkeyup="syncSearch()">
 
   <button onclick="exportData()">Export</button>
 
@@ -190,7 +141,6 @@ function startTimer(){
     alert("Timer already started!");
     return;
   }
-
   timerStarted = true;
   document.getElementById("startBtn").disabled = true;
 
@@ -237,16 +187,21 @@ function finishTeam(i){
   loadBoard();
 }
 
-// UPDATE SCORES
+// ✅ FIXED UPDATE SCORES
 function updateScores(){
 
   let data = JSON.parse(localStorage.getItem("scores")) || [];
 
-  data.forEach((row,i)=>{
-    let val = document.getElementById("score"+i)?.value;
+  data.forEach(row=>{
+
+    let index = teams.indexOf(row.team);
+
+    let val = document.getElementById("score"+index)?.value;
+
     if(val !== ""){
       row.score = parseInt(val);
     }
+
   });
 
   localStorage.setItem("scores", JSON.stringify(data));
@@ -342,7 +297,7 @@ function resetAll(){
 
 // INIT
 window.onload = function(){
-  localStorage.removeItem("scores"); // clean start
+  localStorage.removeItem("scores");
   loadPanel();
   loadBoard();
 };
